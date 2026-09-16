@@ -1,0 +1,106 @@
+# Dependabot 配置 - 每周更新 npm 与 github-actions 依赖
+version: 2
+updates:
+  # npm 依赖（pnpm-lock.yaml）
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '02:00'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 10
+    # 生产依赖次要版本与补丁版本，开发依赖仅补丁
+    allow:
+      - dependency-type: 'direct'
+      - dependency-type: 'indirect'
+    # 限制破坏性更新仅在当前 major 内
+    ignore:
+      - dependency-name: '*'
+        update-types:
+          - 'version-update:semver-major'
+    commit-message:
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps-dev)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'npm'
+    reviewers:
+      - 'hair-salon/owners'
+
+  # npm 依赖 - apps/server
+  - package-ecosystem: 'npm'
+    directory: '/apps/server'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '02:00'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps-server)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'npm'
+      - 'server'
+    reviewers:
+      - 'hair-salon/owners'
+
+  # npm 依赖 - apps/admin
+  - package-ecosystem: 'npm'
+    directory: '/apps/admin'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '02:00'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps-admin)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'npm'
+      - 'admin'
+    reviewers:
+      - 'hair-salon/owners'
+
+  # npm 依赖 - apps/mini
+  - package-ecosystem: 'npm'
+    directory: '/apps/mini'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '02:00'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps-mini)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'npm'
+      - 'mini'
+    reviewers:
+      - 'hair-salon/owners'
+
+  # GitHub Actions 版本更新
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '02:00'
+      timezone: 'Asia/Shanghai'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(ci)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+      - 'ci'
+    reviewers:
+      - 'hair-salon/owners'

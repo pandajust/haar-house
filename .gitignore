@@ -45,6 +45,7 @@ coverage/
 # Taro 构建产物
 .taro/
 mini-taro-build/
+.swc/
 
 # Docker 卷
 docker-data/

@@ -1,0 +1,12 @@
+# 复制为 .envrc（direnv）或 .env（Vite）后按需修改
+# direnv 加载后变量进入 process.env，可被 vite.config.ts 读取
+# Vite 客户端访问变量需以 VITE_ 前缀开头
+
+# 后端服务地址（vite 代理目标 + 客户端 baseURL 拼接）
+export VITE_API_BASE_URL=http://localhost:3000
+
+# API 前缀
+export VITE_API_PREFIX=/api/v1
+
+# 调试 mock 开关（admin/admin 自动登录）
+export VITE_DEV_MOCK_LOGIN=true

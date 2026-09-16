@@ -1,0 +1,64 @@
+# 理发店项目本地开发环境
+# 仅用于开发与测试，生产请使用独立编排。
+#
+# 服务:
+#   - postgres  PostgreSQL 16  (5432, 库 hair, 用户 hair / hair_pass)
+#   - redis     Redis 7        (6379, 无密码)
+#
+# 卷:
+#   - ./docker-data/postgres  PG 数据持久化
+#   - ./docker-data/redis      Redis 数据持久化
+#
+# 初始化:
+#   - ./scripts/db-init.sql 在 PG 首次启动时自动执行（挂载到 /docker-entrypoint-initdb.d/）
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hair-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hair
+      POSTGRES_USER: hair
+      POSTGRES_PASSWORD: hair_pass
+      # 默认 UTC，开发环境对齐中国时区，便于排查日志
+      TZ: Asia/Shanghai
+      PGTZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker-data/postgres:/var/lib/postgresql/data
+      - ./scripts/db-init.sql:/docker-entrypoint-initdb.d/01-db-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hair -d hair"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - hair-dev
+
+  redis:
+    image: redis:7-alpine
+    container_name: hair-redis
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker-data/redis:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - hair-dev
+
+networks:
+  hair-dev:
+    name: hair-dev
+    driver: bridge

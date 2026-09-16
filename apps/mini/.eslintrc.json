@@ -1,0 +1,11 @@
+{
+  "root": true,
+  "extends": "../../.eslintrc.json",
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "project": "./tsconfig.json"
+      }
+    }
+  }
+}

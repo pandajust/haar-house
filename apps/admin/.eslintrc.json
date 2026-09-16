@@ -1,0 +1,12 @@
+{
+  "root": false,
+  "settings": {
+    "import/internal-regex": "^@/",
+    "import/resolver": {
+      "typescript": {
+        "project": "./tsconfig.json",
+        "alwaysTryTypes": true
+      }
+    }
+  }
+}

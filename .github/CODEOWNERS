@@ -1,0 +1,32 @@
+# CODEOWNERS - 理发店项目
+# 格式: <pattern>  <owners>
+# 占位：@hair-salon/owners 是 GitHub Team slug，仓库启用后替换为真实团队
+
+# 默认全局 owner：所有未匹配的路径由 @hair-salon/owners 审批
+*                           @hair-salon/owners
+
+# 根级配置文件
+/.github/                   @hair-salon/owners
+/package.json               @hair-salon/owners
+/pnpm-workspace.yaml        @hair-salon/owners
+/tsconfig*.json             @hair-salon/owners
+/.eslintrc.json             @hair-salon/owners
+/.prettierrc.json           @hair-salon/owners
+/Makefile                   @hair-salon/owners
+
+# 文档
+/docs/                      @hair-salon/owners
+/README.md                  @hair-salon/owners
+/CHANGELOG.md               @hair-salon/owners
+
+# 后端服务（NestJS 单体）
+/apps/server/               @hair-salon/owners
+
+# 管理后台（React + Ant Design Pro）
+/apps/admin/                @hair-salon/owners
+
+# 微信小程序（Taro）
+/apps/mini/                 @hair-salon/owners
+
+# 共享类型与工具包
+/packages/                  @hair-salon/owners
