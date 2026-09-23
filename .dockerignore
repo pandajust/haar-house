@@ -1,0 +1,71 @@
+# 依赖与构建产物
+**/node_modules
+**/dist
+**/build
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+apps/admin/dist
+apps/mini/dist
+apps/mini/.taro
+apps/mini/.swc
+
+# 环境变量（含敏感信息）
+.env
+.env.local
+.env.*.local
+**/.envrc.example
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+docker-data/
+docker-compose*.yml
+Dockerfile*
+
+# 编辑器
+.vscode
+.idea
+*.swp
+*.swo
+
+# 系统
+.DS_Store
+Thumbs.db
+
+# 临时与缓存
+.cache
+.eslintcache
+.stylelintcache
+.prettiercache
+tmp
+temp
+
+# 测试与日志
+coverage
+.nyc_output
+*.log
+logs
+npm-debug.log*
+pnpm-debug.log*
+
+# 文档（部署时不需要）
+docs
+README.md
+CHANGELOG.md
+
+# CI / IDE 配置
+.github
+.gitlab-ci.yml
+.gitattributes
+
+# 不需要的前端源码（后端镜像构建不需要）
+apps/admin
+apps/mini
+packages
+
+# SELF-CHECK 等内部文档
+**/*SELF-CHECK*

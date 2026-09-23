@@ -1,0 +1,35 @@
+# Railway 部署配置 - 理发店管理系统后端
+# 文档: https://docs.railway.app/deploy/config-as-code
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+watchPatterns = [
+  "/apps/server/**",
+  "/prisma/**",
+  "/package.json",
+  "/pnpm-lock.yaml",
+  "/Dockerfile",
+]
+
+[deploy]
+startCommand = "sh -c 'npx prisma migrate deploy --schema=prisma/schema.prisma && node dist/main.js'"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Railway 不会硬编码这些值，需在 Railway Dashboard 设置对应变量:
+# - DATABASE_URL        (Railway Postgres 插件提供, 自动注入)
+# - REDIS_URL           (Railway Redis 插件提供, 自动注入)
+# - JWT_SECRET          (随机 32+ 字符, 必填)
+# - JWT_EXPIRES_IN=2h
+# - JWT_REFRESH_EXPIRES_IN=7d
+# - API_PREFIX=api
+# - SWAGGER_PREFIX=api/docs
+# - CORS_ORIGINS        (管理后台域名, 如 https://your-admin.vercel.app)
+# - WX_APPID            (微信小程序 AppID)
+# - WX_SECRET           (微信小程序 Secret)
+# - PORT=3000
+# - NODE_ENV=production
+# - LOG_LEVEL=info
