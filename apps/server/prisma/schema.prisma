@@ -1,0 +1,395 @@
+// 理发店管理系统 - Prisma schema
+//
+// 数据库: PostgreSQL 16
+// 扩展: uuid-ossp（uuid_generate_v4）/ pg_trgm（模糊检索）
+//
+// 设计原则:
+//  - 所有主键用 uuid（由 dbgenerated uuid_generate_v4() 生成）
+//  - 所有金额用 decimal(10,2)，禁止 float
+//  - 时间字段用 timestamptz
+//  - 当日时间（如排班起止）用 time
+//  - 数组字段: text[] 用 String[]；uuid[] 用 Unsupported("uuid[]")
+//
+// 表前缀按模块分组（spec §模块化单体内部模块）:
+//  shop_*  / staff_*  / client_*  / appt_* (appointment)  / order_*
+//  member_* (member_card / card_transaction)  / marketing_* (coupon)
+
+generator client {
+  provider      = "prisma-client-js"
+  // 输出到 node_modules/.prisma/client，Prisma 默认行为
+  // 通过 schema.prisma 所在目录的 prisma generate 命令生成
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// 枚举
+// ============================================================
+
+enum StaffRole {
+  owner     // 店主
+  manager   // 店长
+  stylist   // 理发师
+  assistant // 助理
+  admin     // 系统管理员
+}
+
+enum StaffStatus {
+  active
+  inactive
+}
+
+enum ClientGender {
+  male
+  female
+  unknown
+}
+
+enum AppointmentStatus {
+  pending     // 待确认
+  confirmed   // 已确认
+  in_service  // 服务中
+  done        // 已完成
+  canceled    // 已取消
+  no_show     // 爽约
+}
+
+enum AppointmentSource {
+  mini // 小程序预约
+  shop // 店内开单
+}
+
+enum PayMethod {
+  cash          // 现金
+  wechat        // 微信支付
+  card_balance  // 储值卡余额
+  card_times    // 次卡次数
+  mixed         // 混合支付
+}
+
+enum OrderStatus {
+  paid     // 已支付
+  refunded // 已退款
+}
+
+enum MemberCardType {
+  stored_value // 储值卡
+  times        // 次卡
+  package      // 套餐
+}
+
+enum MemberCardStatus {
+  active   // 正常
+  frozen   // 冻结
+  expired  // 过期
+}
+
+enum CardTransactionType {
+  recharge // 充值
+  consume // 消费
+  refund  // 退款
+  adjust  // 调整
+}
+
+enum CouponType {
+  discount // 折扣
+  gift    // 赠品
+  rebate  // 满返
+}
+
+// ============================================================
+// 1. shop 店铺信息
+// ============================================================
+
+model Shop {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name          String
+  phone         String
+  address       String
+  // 营业时间 jsonb: [{weekday:0-6, start:"09:00", end:"21:00"}]
+  businessHours Json     @map("business_hours")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // 关联
+  Staff   Staff[]
+  Service Service[]
+
+  @@map("shop")
+}
+
+// ============================================================
+// 2. staff 员工/理发师
+// ============================================================
+
+model Staff {
+  id             String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  shopId         String       @map("shop_id") @db.Uuid
+  name           String
+  phone          String
+  // 管理后台登录账号（唯一）
+  username       String       @unique
+  // bcrypt 密码哈希
+  passwordHash   String       @map("password_hash")
+  role           StaffRole
+  avatar         String?
+  bio            String?
+  // 提成比例 0~1，decimal(5,4)，如 0.3000 = 30%
+  commissionRate Decimal      @default(0) @map("commission_rate") @db.Decimal(5, 4)
+  status         StaffStatus  @default(active)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  // 关联
+  shop           Shop          @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  schedules      StaffSchedule[]
+  appointments   Appointment[]
+  orderItems     OrderItem[]
+  orders         Order[]
+
+  @@index([shopId])
+  @@map("staff")
+}
+
+// ============================================================
+// 3. staff_schedule 排班
+// ============================================================
+
+model StaffSchedule {
+  id            String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  staffId       String                @map("staff_id") @db.Uuid
+  // 0=周日, 1=周一, ..., 6=周六
+  weekday       Int
+  // 当日开始时间（HH:MM:SS）
+  startTime     Unsupported("time")   @map("start_time")
+  // 当日结束时间
+  endTime       Unsupported("time")   @map("end_time")
+  // 生效起止日期
+  effectiveFrom DateTime              @map("effective_from") @db.Date
+  effectiveTo   DateTime?             @map("effective_to") @db.Date
+
+  // 关联
+  staff         Staff                 @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@map("staff_schedule")
+}
+
+// ============================================================
+// 4. client 客户档案
+// ============================================================
+
+model Client {
+  id          String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  // 微信小程序 openid
+  openid      String        @unique
+  phone       String?
+  name        String
+  gender      ClientGender  @default(unknown)
+  // 自定义标签数组
+  tags        String[]
+  note        String?
+  lastVisitAt DateTime?     @map("last_visit_at") @db.Timestamptz
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  // 关联
+  appointments   Appointment[]
+  orders         Order[]
+  memberCards    MemberCard[]
+
+  @@index([phone])
+  @@map("client")
+}
+
+// ============================================================
+// 5. service 服务目录
+// ============================================================
+
+model Service {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  shopId       String   @map("shop_id") @db.Uuid
+  name         String
+  description  String?
+  // 服务时长（分钟）
+  durationMin  Int      @map("duration_min")
+  price        Decimal  @db.Decimal(10, 2)
+  category     String
+  imageUrl     String?  @map("image_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // 关联
+  shop         Shop         @relation(fields: [shopId], references: [id], onDelete: Restrict)
+  appointments Appointment[]
+  orderItems   OrderItem[]
+
+  @@index([shopId])
+  @@map("service")
+}
+
+// ============================================================
+// 6. appointment 预约
+// ============================================================
+
+model Appointment {
+  id          String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  clientId    String             @map("client_id") @db.Uuid
+  staffId     String             @map("staff_id") @db.Uuid
+  serviceId   String             @map("service_id") @db.Uuid
+  startTime   DateTime           @map("start_time") @db.Timestamptz
+  durationMin Int                @map("duration_min")
+  status      AppointmentStatus  @default(pending)
+  source      AppointmentSource  @default(mini)
+  note        String?
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+
+  // 关联
+  client      Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  staff       Staff              @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  service     Service            @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  // 防止同一理发师同一时间槽重复预约（spec §失败处理）
+  @@unique([staffId, startTime])
+  @@index([clientId])
+  @@index([serviceId])
+  @@index([startTime])
+  @@map("appointment")
+}
+
+// ============================================================
+// 7. order 订单
+// ============================================================
+
+model Order {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  // 散客订单可空
+  clientId      String?      @map("client_id") @db.Uuid
+  staffId       String       @map("staff_id") @db.Uuid
+  // 订单明细快照 jsonb: [{ service_id, staff_id, qty, price }]
+  items         Json
+  payMethod     PayMethod    @map("pay_method")
+  discount      Decimal      @default(0) @db.Decimal(10, 2)
+  total         Decimal      @db.Decimal(10, 2)
+  status        OrderStatus  @default(paid)
+  refundAmount  Decimal?     @map("refund_amount") @db.Decimal(10, 2)
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  paidAt        DateTime?    @map("paid_at") @db.Timestamptz
+
+  // 关联
+  client        Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  staff         Staff        @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  orderItems    OrderItem[]
+  cardTransactions CardTransaction[]
+
+  @@index([clientId])
+  @@index([staffId])
+  @@map("order")
+}
+
+// ============================================================
+// 8. order_item 订单明细（结构化拆分）
+// ============================================================
+
+model OrderItem {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orderId    String   @map("order_id") @db.Uuid
+  serviceId  String?  @map("service_id") @db.Uuid
+  staffId    String   @map("staff_id") @db.Uuid
+  qty        Int      @default(1)
+  price      Decimal  @db.Decimal(10, 2)
+
+  // 关联
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  service     Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  staff      Staff    @relation(fields: [staffId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([serviceId])
+  @@index([staffId])
+  @@map("order_item")
+}
+
+// ============================================================
+// 9. member_card 会员卡
+// ============================================================
+
+model MemberCard {
+  id              String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  clientId        String             @map("client_id") @db.Uuid
+  type            MemberCardType
+  // 储值卡余额；次卡/套餐可为 0
+  balance         Decimal            @default(0) @db.Decimal(10, 2)
+  // 剩余次数（次卡/套餐可空）
+  remainingTimes  Int?               @map("remaining_times")
+  // 次卡/套餐绑定的服务 id 列表
+  boundServices   Unsupported("uuid[]")? @map("bound_services")
+  status          MemberCardStatus   @default(active)
+  issuedAt        DateTime           @default(now()) @map("issued_at") @db.Timestamptz
+  expiredAt       DateTime?          @map("expired_at") @db.Timestamptz
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+
+  // 关联
+  client          Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  transactions    CardTransaction[]
+
+  @@index([clientId])
+  @@map("member_card")
+}
+
+// ============================================================
+// 10. card_transaction 卡流水
+// ============================================================
+
+model CardTransaction {
+  id            String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cardId        String               @map("card_id") @db.Uuid
+  type          CardTransactionType
+  // 金额变动（储值卡）
+  delta         Decimal?             @db.Decimal(10, 2)
+  // 次数变动（次卡/套餐）
+  deltaTimes    Int?                 @map("delta_times")
+  reason        String
+  // 关联订单（充值/消费/退款时）
+  refOrderId    String?              @map("ref_order_id") @db.Uuid
+  // 操作后余额（用于对账）
+  balanceAfter  Decimal              @map("balance_after") @db.Decimal(10, 2)
+  createdAt     DateTime             @default(now()) @map("created_at") @db.Timestamptz
+
+  // 关联
+  card          MemberCard           @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  refOrder      Order?               @relation(fields: [refOrderId], references: [id], onDelete: SetNull)
+
+  @@index([cardId])
+  @@index([refOrderId])
+  @@map("card_transaction")
+}
+
+// ============================================================
+// 11. coupon 优惠券
+// ============================================================
+
+model Coupon {
+  id           String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  code         String      @unique
+  name         String
+  type         CouponType
+  // 折扣值/赠品价值/满返金额
+  value        Decimal     @db.Decimal(10, 2)
+  minSpend     Decimal      @default(0) @map("min_spend") @db.Decimal(10, 2)
+  validFrom    DateTime     @map("valid_from") @db.Timestamptz
+  validTo      DateTime    @map("valid_to") @db.Timestamptz
+  totalCount   Int         @map("total_count")
+  issuedCount  Int         @default(0) @map("issued_count")
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([code])
+  @@map("coupon")
+}

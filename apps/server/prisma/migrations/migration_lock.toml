@@ -1,0 +1,3 @@
+# Prisma migration lock file.
+# 锁定数据库 provider，避免在不同 DB 间漂移。
+provider = "postgresql"

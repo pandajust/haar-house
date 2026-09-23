@@ -74,7 +74,7 @@ export default function Login() {
         <div style={{ marginBottom: 8 }}>
           <Alert
             type="info"
-            message="开发期 mock：账号 admin / 密码 admin 直接登录"
+            message="账号 admin / 密码 admin123（开发期 mock 兜底）"
             showIcon
             banner
           />

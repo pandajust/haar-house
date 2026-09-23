@@ -1,7 +1,10 @@
 export default defineAppConfig({
   pages: [
     'pages/index/index',
-    'pages/profile/index'
+    'pages/profile/index',
+    'pages/booking/index',
+    'pages/orders/index',
+    'pages/member/index'
   ],
   window: {
     backgroundTextStyle: 'light',

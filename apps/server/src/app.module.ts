@@ -1,34 +1,49 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import {
+  APP_FILTER,
+  APP_GUARD,
+  APP_INTERCEPTOR,
+  APP_PIPE,
+} from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor, TransformInterceptor } from './common/interceptors';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
+import { AuthModule } from './modules/auth/auth.module';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { loadDerivedConfig } from './config/configuration';
 import { validateEnv } from './config/env.validation';
+import { NotificationModule } from './modules/notification/notification.module';
+import { ShopModule } from './modules/shop/shop.module';
+import { StaffModule } from './modules/staff/staff.module';
+import { ClientModule } from './modules/client/client.module';
+import { AppointmentModule } from './modules/appointment/appointment.module';
+import { OrderModule } from './modules/order/order.module';
+import { MemberCardModule } from './modules/member-card/member-card.module';
+import { PrismaModule } from './prisma';
+import { RedisModule } from './redis';
 
-/**
- * 根模块。
- *
- * 全局注册：
- *  - ConfigModule：@nestjs/config + zod 校验
- *  - APP_PIPE: ZodValidationPipe（路由级用 strictObject 拒绝未知字段，
- *              等价 whitelist+forbidNonWhitelisted）
- *  - APP_FILTER: HttpExceptionFilter（统一错误格式 {code, message, details}）
- *  - APP_INTERCEPTOR: LoggingInterceptor + TransformInterceptor
- *    （统一响应格式 {code, data, message}）
- */
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      // 用 zod 替代 joi 做环境变量校验，失败即 fail-fast
       validate: (env) => validateEnv(env as Record<string, unknown>),
       load: [loadDerivedConfig],
     }),
+    PrismaModule,
+    RedisModule,
+    NotificationModule,
+    AuthModule,
+    ShopModule,
+    StaffModule,
+    ClientModule,
+    AppointmentModule,
+    OrderModule,
+    MemberCardModule,
   ],
   controllers: [AppController],
   providers: [
@@ -36,6 +51,8 @@ import { validateEnv } from './config/env.validation';
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}

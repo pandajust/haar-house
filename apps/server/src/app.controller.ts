@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 
+import { Public } from './modules/auth/decorators/public.decorator';
 import { strictObject, ZodValidationPipe } from './common/pipes/zod-validation.pipe';
 
 /**
@@ -33,6 +34,8 @@ export type EchoDto = z.infer<typeof echoSchema>;
 @ApiTags('app')
 @Controller()
 export class AppController {
+  // @Public：豁免全局 JwtAuthGuard，健康检查无需登录态
+  @Public()
   @Get('health')
   @ApiOperation({ summary: '健康检查', description: '返回服务存活状态与时间戳' })
   health(): HealthData {
@@ -42,6 +45,8 @@ export class AppController {
     };
   }
 
+  // @Public：echo 为示例端点，便于联调
+  @Public()
   @Post('echo')
   @HttpCode(200)
   @ApiOperation({ summary: 'Echo 示例', description: '演示 zod 严格校验：拒绝未知字段' })

@@ -40,10 +40,14 @@ export const useUserStore = create<UserState>((set) => ({
   login: async (username, password) => {
     set({ loading: true });
     try {
-      // 调试期 mock：DEV 环境下 admin/admin 直接返回虚拟 token，绕过后端
-      // 联调时切真实请求：await request.post<LoginResponse>('/auth/login', { username, password })
+      // 调试期 mock：DEV 环境下 admin / admin(或 admin123) 直接返回虚拟 token，绕过后端
+      // 联调时走真实请求：request.post<LoginResponse>('/auth/login', { username, password })
       let data: LoginResponse;
-      if (DEV_MOCK && username === 'admin' && password === 'admin') {
+      if (
+        DEV_MOCK &&
+        username === 'admin' &&
+        (password === 'admin' || password === 'admin123')
+      ) {
         data = {
           access_token: 'mock-access-token-' + Date.now(),
           refresh_token: 'mock-refresh-token-' + Date.now(),

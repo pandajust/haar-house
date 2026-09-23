@@ -29,7 +29,7 @@ export async function refreshAccessToken(): Promise<string | null> {
   if (refreshToken) {
     try {
       const res = await Taro.request({
-        url: `${BASE_URL}/api/v1/auth/refresh`,
+        url: `${BASE_URL}/api/auth/refresh`,
         method: 'POST',
         data: { refresh_token: refreshToken },
         header: { 'Content-Type': 'application/json' },

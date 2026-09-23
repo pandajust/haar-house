@@ -3,7 +3,7 @@ import axios, { type AxiosError, type AxiosInstance, type InternalAxiosRequestCo
 import { clearTokens, getAccessToken } from './auth';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
-const apiPrefix = import.meta.env.VITE_API_PREFIX ?? '/api/v1';
+const apiPrefix = import.meta.env.VITE_API_PREFIX ?? '/api';
 
 const instance: AxiosInstance = axios.create({
   baseURL: `${baseURL}${apiPrefix}`,
