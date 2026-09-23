@@ -30,7 +30,7 @@
     "@tarojs/cli": "3.6.25",
     "@tarojs/plugin-framework-react": "3.6.25",
     "@tarojs/plugin-platform-h5": "3.6.25",
-    "@tarojs/plugin-platform-weapp": "3.6.25",
+    "@tarojs/plugin-platform-weapp": "3.6.40",
     "@tarojs/webpack5-runner": "3.6.25",
     "@types/react": "^18.2.0",
     "@types/webpack-env": "^1.18.0",
