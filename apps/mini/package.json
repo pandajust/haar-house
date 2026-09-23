@@ -16,7 +16,7 @@
     "@tarojs/components": "3.6.25",
     "@tarojs/helper": "3.6.25",
     "@tarojs/react": "3.6.25",
-    "@tarojs/router": "3.6.25",
+    "@tarojs/router": "3.6.40",
     "@tarojs/runtime": "3.6.25",
     "@tarojs/shared": "3.6.25",
     "@tarojs/taro": "3.6.25",
