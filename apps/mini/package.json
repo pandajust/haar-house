@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
-    "@tarojs/components": "3.6.25",
+    "@tarojs/components": "3.6.40",
     "@tarojs/helper": "3.6.25",
     "@tarojs/react": "3.6.25",
     "@tarojs/router": "3.6.25",
