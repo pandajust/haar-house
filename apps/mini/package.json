@@ -35,7 +35,7 @@
     "@types/react": "^18.2.0",
     "@types/webpack-env": "^1.18.0",
     "autoprefixer": "^10.4.19",
-    "babel-preset-taro": "3.6.25",
+    "babel-preset-taro": "3.6.40",
     "eslint": "^8.57.0",
     "eslint-config-taro": "3.6.25",
     "eslint-plugin-react": "^7.34.0",
