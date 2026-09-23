@@ -27,7 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
-    "@tarojs/cli": "3.6.25",
+    "@tarojs/cli": "3.6.40",
     "@tarojs/plugin-framework-react": "3.6.25",
     "@tarojs/plugin-platform-h5": "3.6.25",
     "@tarojs/plugin-platform-weapp": "3.6.25",
