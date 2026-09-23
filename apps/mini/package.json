@@ -41,7 +41,7 @@
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "postcss": "^8.4.38",
-    "react-refresh": "^0.14.0",
+    "react-refresh": "^0.19.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.0",
     "weapp-tailwindcss": "^3.1.0"
